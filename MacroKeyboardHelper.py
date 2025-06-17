@@ -385,7 +385,8 @@ def check_queue():
 
 def on_quit():
     icon.stop()
-    # root.quit()
+    sys.exit(0)
+    root.quit()
 
 def open_settings():
     SettingsWindow(root)
