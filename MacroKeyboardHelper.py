@@ -397,7 +397,7 @@ def show_about():
     about.resizable(False, False)
     about.iconbitmap(os.path.join(BASE_DIR, "icon.ico"))
     center_window_main(about, 300, 150)
-    tk.Label(about, text="Macro Keyboard Helper\nby hycday\nVersion 1.0.0", padx=20, pady=20).pack()
+    tk.Label(about, text="Macro Keyboard Helper\nby dayeggpi\nVersion 1.0.0", padx=20, pady=20).pack()
     tk.Button(about, text="OK", command=about.destroy).pack(pady=(0, 10))
     
 def reload_images():
