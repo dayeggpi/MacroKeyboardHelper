@@ -9,8 +9,10 @@ Settings:
 
 ![Image](https://i.imgur.com/TVqGjPT.png)
 
-this is an example of images I did to help me use this DIY MacroKeyboard
-![Image](https://i.imgur.com/4ZWi2i2.jpeg | width=300)
+this is an example of images I did to help me use this DIY MacroKeyboard:
+
+<img src="https://i.imgur.com/4ZWi2i2.jpeg" width="300">
+
 
 ## Purpose
 
