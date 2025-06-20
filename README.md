@@ -2,9 +2,11 @@
 Display images in notif area via HotKey to ease up usage of Macro Keyboard (Stream Deck etc)
 
 In action (after pressing the Hotkey):
+
 ![Image](https://i.imgur.com/yjwsGYy.gif)
 
 Settings:
+
 ![Image](https://i.imgur.com/TVqGjPT.png)
 
 this is an example of images I did to help me use this DIY MacroKeyboard
