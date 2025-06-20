@@ -1,6 +1,12 @@
 # MacroKeyboardHelper
 Display images in notif area via HotKey to ease up usage of Macro Keyboard (Stream Deck etc)
 
+![Image](https://i.imgur.com/yjwsGYy.gif)
+![Image](https://i.imgur.com/TVqGjPT.png)
+
+this is an example of images I did to help me use this DIY MacroKeyboard
+![Image](https://i.imgur.com/4ZWi2i2.jpeg)
+
 ## Purpose
 
 When using a Macro Keyboard, or a Stream Deck, or a DIY version (https://legeeketsonmarteau.fr/stream-deck-diy/ for example), you might want to have a quick hint to remember what each buttons would do.
