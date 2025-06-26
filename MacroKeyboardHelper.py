@@ -1,19 +1,21 @@
 import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
 import ctypes
-import keyboard
+from global_hotkeys import *  
+# from global_hotkeys import keycode_checker #uncomment to try out keys in console and get the code
 import queue
 import os
 import sys
 import time
 import pystray
+import keyboard
 import threading
 import configparser
 from tkinter import ttk
 from tkinter import messagebox
 
 # Config defaults
-HOTKEY = 'ctrl+shift+i'
+HOTKEY = 'control+shift+i'
 DISPLAY_TIME = 3000
 FADE_DURATION = 1000
 FADE_STEPS = 20
@@ -28,6 +30,64 @@ if hasattr(sys, '_MEIPASS'):
 else:
     BASE_DIR = os.path.abspath(".")
 
+
+SUPPORTED_KEYS = {
+    'backspace', 'tab', 'clear', 'enter', 'shift', 'control', 'alt', 'pause',
+    'caps_lock', 'escape', 'space', 'page_up', 'page_down', 'left_window', 'right_window', 'window',
+    'end', 'home', 'left', 'up', 'right', 'down', 'select', 'print', 'execute', 'print_screen',
+    'insert', 'delete', 'help', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+    'numpad_0','numpad_1','numpad_2','numpad_3','numpad_4','numpad_5','numpad_6','numpad_7','numpad_8','numpad_9',
+    'multiply_key','add_key','separator_key','|','subtract_key','decimal_key','divide_key',
+    'f1','f2','f3','f4','f5','f6','f7','f8','f9','f10','f11','f12','f13','f14','f15','f16','f17','f18','f19','f20','f21','f22','f23','f24',
+    'num_lock','scroll_lock',
+    'ctrldroite', 'ctrl droite', 'alt gr'
+    'left_shift','right_shift','right_control','left_menu',
+    #'right_menu', 'browser_back','browser_forward','browser_refresh','browser_stop','browser_search','browser_favorites','browser_start_and_home',
+    'left_control',
+    'volume_mute','volume_Down','volume_up','next_track','previous_track','stop_media','play/pause_media','start_mail','select_media','start_application_1','start_application_2',
+    'attn_key','crsel_key','exsel_key','play_key','zoom_key','clear_key','+','-',',','.','/','`',';','[','\\',']','\''
+}
+
+
+#from tkinter to global keys
+def normalize_key(key):
+    mapping = {
+        "control_l": "control",
+        "ctrl" : "control",
+        "ctrl droite": "control",
+        "ctrldroite": "control",
+        "alt gr": "control+alt",
+        "impr.ecran" : "screenshot",
+        # "menu": "right_menu",
+        "windows gauche": "left_window",
+        "maj":"shift",
+        "verr.maj":"caps_lock",
+        "previous track":"previous_track",
+        "defil": "scroll_lock",
+        "pause": "pause",
+        "pg.prec": "page_up",
+        "pg.suiv": "page_down",
+        "screenshot": "print_screen",
+        "fin": "end",
+        "origine": "home",
+        "suppr": "delete",
+        "control_r": "right_control",
+        "shift_l": "shift",
+        "shift_r": "right_shift",
+        "alt_l": "alt",
+        "alt_r": "alt",
+        "meta_l": "window",
+        "meta_r": "right_window",
+        "super_l": "window",
+        "super_r": "right_window",
+        "return": "enter",
+        "escape": "escape",
+        "space": "space",
+        # Extend as needed...
+    }
+    return mapping.get(key.lower(), key.lower())
+    
 def center_window_main(win, width=1200, height=600):
     win.update_idletasks()
     screen_width = win.winfo_screenwidth()
@@ -96,7 +156,7 @@ class PopupWindow:
         self.popup = tk.Toplevel(self.popup)
         self.popup.overrideredirect(True)
         self.popup.attributes('-topmost', True)
-        self.popup.attributes('-toolwindow', True)  # removes taskbar icon
+        self.popup.attributes('-toolwindow', True)  
         self.popup.withdraw()
 
         self.images = load_images()
@@ -159,7 +219,6 @@ class PopupWindow:
         self.label.bind("<Enter>", self.reset_fade_timer)
         self.label.bind("<Leave>", self.reset_fade_timer)  # Don't restart timer when leaving image
 
-        # Bind to all widgets to handle hover properly
         for widget in [self.popup, self.frame, self.label, self.btn_prev, self.btn_next, self.progress, self.pagination, self.close_button]:
             widget.bind("<Enter>", self.reset_fade_timer)
             widget.bind("<Leave>", self.check_mouse_leave)
@@ -185,24 +244,18 @@ class PopupWindow:
         self.show()
 
     def check_mouse_leave(self, event=None):
-        # Delay the check to see if mouse entered another widget
         self.popup.after(10, self._delayed_mouse_check)
 
     def _delayed_mouse_check(self):
-        # Get mouse position relative to popup window
         try:
             x = self.popup.winfo_pointerx() - self.popup.winfo_rootx()
             y = self.popup.winfo_pointery() - self.popup.winfo_rooty()
             
-            # Check if mouse is still within popup bounds
             if 0 <= x <= self.popup.winfo_width() and 0 <= y <= self.popup.winfo_height():
-                # Mouse is still inside popup, keep timer paused
                 self.reset_fade_timer()
             else:
-                # Mouse has left popup, restart timer
                 self.start_fade_timer()
         except:
-            # If there's any error, just restart the timer
             self.start_fade_timer()    
     
     def update_image(self):
@@ -218,14 +271,13 @@ class PopupWindow:
         img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
 
         img_width, img_height = img.size
-        button_margin = 80  # 40 on each side
+        button_margin = 80  
         self.photo = ImageTk.PhotoImage(img)
         self.label.configure(image=self.photo)
         x = screen_width - img_width - button_margin - 20
         y = screen_height - img_height - 120 #move notif area higher by increasing that number
     
-        # Reserve extra space for buttons and progress bar
-        extra_height = 40  # adjust if needed
+        extra_height = 40 
         self.popup.geometry(f'{img_width + button_margin}x{img_height + extra_height}+{x}+{y}')
         self.frame.pack_propagate(False)
         
@@ -292,10 +344,11 @@ class PopupWindow:
         self.current_image_index = (self.current_image_index - 1) % len(self.images)
         self.update_image()
 
+
 class SettingsWindow:
     def __init__(self, master):
-       
         self.top = tk.Toplevel(master)
+        self.top.resizable(False, False)
         self.top.title("Settings for Macro Keyboard Helper")
         self.top.iconbitmap(os.path.join(BASE_DIR, "icon.ico"))
         center_window_main(self.top, 300, 150)
@@ -304,69 +357,68 @@ class SettingsWindow:
         self.entry = tk.Entry(self.top, textvariable=self.hotkey_var)
         self.entry.pack()
         self.entry.configure(state='disable')
-        tk.Button(self.top, text="Set Hotkey", command=self.start_recording).pack()
+        self.set_hotkey_button = tk.Button(self.top, text="Set hotkey", command=self.start_recording)
+        self.set_hotkey_button.pack()        
         tk.Label(self.top, text="Display time (ms):").pack()
         self.fade_var = tk.IntVar(value=DISPLAY_TIME)
-        tk.Entry(self.top, textvariable=self.fade_var).pack()
-        tk.Button(self.top, text="Save", command=self.save).pack()
+        self.displaytimeinput = tk.Entry(self.top, textvariable=self.fade_var)
+        self.displaytimeinput.pack()
 
+        self.set_save_button = tk.Button(self.top, text="Save", command=self.save)    
+        self.set_save_button.pack()        
 
+        self.unsupported_label = tk.Label(self.top, text="", fg="red")
+        self.unsupported_label.pack()
 
-    def start_recording(self):
-        self.hotkey_var.set("Recording...")
-
-        self.recording = True
+        self.recording = False
         self.pressed_keys = set()
         self.all_keys = set()
 
-        def handler(event):
-            if not self.recording:
-                return
+            
+    def start_recording(self):
+        self.displaytimeinput.configure(state='disable')
+        self.hotkey_var.set("Recording... (press your combo)")
+        self.set_hotkey_button.config(state='disabled')
 
-            if event.event_type == 'down':
-                self.pressed_keys.add(event.name)
-                self.all_keys.add(event.name)
+        keyboard.unhook_all()
 
-            elif event.event_type == 'up':
-                self.pressed_keys.discard(event.name)
+        def record():
+            hotkey = keyboard.read_hotkey(suppress=False)
+            normalized_hotkey = '+'.join(normalize_key(k) for k in hotkey.split('+'))
+            self.hotkey_var.set(normalized_hotkey)         
+            self.set_hotkey_button.config(state='normal')
+            self.displaytimeinput.configure(state='normal')
 
-                if not self.pressed_keys:
-                    # All keys released
-                    combo = '+'.join(sorted(self.all_keys))
-                    self.hotkey_var.set(combo)
-                    keyboard.unhook_all()
-                    self.recording = False
-
-        keyboard.hook(handler)
+        threading.Thread(target=record, daemon=True).start()        
 
 
     def save(self):
-        global HOTKEY, DISPLAY_TIME
-        new_hotkey = self.hotkey_var.get()
+        global HOTKEY, DISPLAY_TIME, bindings
+        # new_hotkey = self.hotkey_var.get()
+        new_hotkey = '+'.join(normalize_key(k) for k in self.hotkey_var.get().split('+'))
 
-        # Do not try to add invalid hotkey
-        if "recording" in new_hotkey.lower():
-            print("Invalid hotkey string")
+        if not new_hotkey or "recording" in new_hotkey.lower():
+            messagebox.showerror("Invalid hotkey", "Invalid hotkey string.")
             return
 
-        # Safely remove previous hotkey if it existed
         try:
-            keyboard.remove_hotkey(HOTKEY)
-        except (KeyError, ValueError):
-            pass
+            clear_hotkeys()  
+            bindings = [
+                [new_hotkey, None, on_hotkey, False],
+            ]
+            register_hotkeys(bindings)
+            start_checking_hotkeys()
+        except Exception as e:
+            messagebox.showerror("Invalid hotkey", f"Error: {e}")
+            bindings = []
+            return
 
         HOTKEY = new_hotkey
         DISPLAY_TIME = int(self.fade_var.get())
-
-        # Try adding new hotkey
-        try:
-            keyboard.add_hotkey(HOTKEY, on_hotkey)
-        except ValueError as e:
-            print(f"Invalid hotkey: {e}")
-            return
-
         save_settings(HOTKEY, DISPLAY_TIME)
         self.top.destroy()
+
+
 
 def on_hotkey():
     reload_images()
@@ -384,13 +436,17 @@ def check_queue():
     root.after(50, check_queue)
 
 def on_quit():
+    stop_checking_hotkeys() 
     icon.stop()
     sys.exit(0)
     root.quit()
 
-def open_settings():
-    SettingsWindow(root)
+#
 
+def open_settings():
+    keyboard.unhook_all()  
+    SettingsWindow(root)
+    
 def show_about():
     about = tk.Toplevel(root)
     about.title("About Macro Keyboard Helper")
@@ -415,19 +471,24 @@ def run_systray():
     icon_image = Image.open(os.path.join(BASE_DIR, "icon.ico"))
     menu = pystray.Menu(
         pystray.MenuItem('Settings', lambda: root.after(0, open_settings)),
-        # pystray.MenuItem('Reload Images', lambda: root.after(0, reload_images)),
+        pystray.MenuItem('Reload Images', lambda: root.after(0, reload_images)),
         pystray.MenuItem('About', lambda: root.after(0, show_about)),
         pystray.MenuItem('Quit', lambda: root.after(0, on_quit))
     )
     global icon
-    icon = pystray.Icon("notif", icon_image, "Notifier", menu)
+    icon = pystray.Icon("notif", icon_image, "Macro Keyboard Helper", menu)
     icon.run()
+
 
 # Main
 root = tk.Tk()
 popup = PopupWindow(root)
 
-keyboard.add_hotkey(HOTKEY, on_hotkey)
+
+bindings = [[HOTKEY, None, on_hotkey, False]]
+
+register_hotkeys(bindings)
+start_checking_hotkeys()
 
 threading.Thread(target=run_systray, daemon=True).start()
 
